@@ -1,0 +1,67 @@
+{% load static %}
+<!-- Utilize Mobile Menu Start -->
+<div id="ltn__utilize-mobile-menu" class="ltn__utilize ltn__utilize-mobile-menu">
+    <div class="ltn__utilize-menu-inner ltn__scrollbar">
+        <div class="ltn__utilize-menu-head">
+            <div class="site-logo">
+                <a href="index.html"><img src="{% static "img/logo.png" %}" alt="Logo"></a>
+            </div>
+            <button class="ltn__utilize-close">×</button>
+        </div>
+        <div class="ltn__utilize-menu-search-form">
+            <form id="#" method="get"  action="/products/?search=">
+                <input type="text" name="search" placeholder="Search..." value="">
+                <button type="submit"><i class="fas fa-search"></i></button>
+            </form>
+        </div>
+        <div class="ltn__utilize-menu">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/products">Menu</a></li>
+                <li><a href="/products?filter=offers">Deals</a></li>
+                <li><a href="/user/account/#liton_tab_1_2">Orders</a>
+            </ul>
+        </div>
+        <div class="ltn__utilize-buttons ltn__utilize-buttons-2">
+            <ul>
+                <li>
+                    <a href="/user/account" title="My Account">
+                        <span class="utilize-btn-icon">
+                            <i class="far fa-user"></i>
+                        </span>
+                        My Account
+                    </a>
+                </li>
+                <li>
+                    <a href="/wishlists" title="Wishlist">
+                        <span class="utilize-btn-icon">
+                            <i class="far fa-heart"></i>
+                            <sup>{{wishlist_quantity}}</sup>
+                        </span>
+                        Wishlist
+                    </a>
+                </li>
+                <li>
+                    <a href="/cart" title="Shoping Cart">
+                        <span class="utilize-btn-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                            <sup>{{cart_quantity}}</sup>
+                        </span>
+                        Shoping Cart
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="ltn__social-media-2">
+            <ul>
+                <li><a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a></li>
+                <li><a href="#" title="Twitter"><i class="fab fa-twitter"></i></a></li>
+                <li><a href="#" title="Linkedin"><i class="fab fa-linkedin"></i></a></li>
+                <li><a href="#" title="Instagram"><i class="fab fa-instagram"></i></a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+<!-- Utilize Mobile Menu End -->
+
+<div class="ltn__utilize-overlay"></div>

@@ -1,0 +1,126 @@
+{% extends "public/user/base.html" %}
+
+{% block title %}Verification{% endblock title %}
+
+{% block content %}
+
+    {% include "components/user/toast.html" %}
+
+    <!-- LOGIN AREA START -->
+    <div class="ltn__login-area pb-65 pt-100">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="section-title-area text-center">
+                        <h1 class="section-title">Verify <br>Your Account</h1>
+                        <p>Get access to your Orders, Wishlist and Recommendations</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="account-login-inner">
+                        <form method="post" class="ltn__form-box contact-form-box">
+                            {% csrf_token %}
+                            
+                            <div class="searchbox-wrap" style="display: flex;">
+                                <input type="email" name="email" placeholder="Email*" value="{{email}}" readonly>
+                                    <a href="/user/signout"><button class="theme-btn-1 btn" type="button" style="
+                                    height                            : 65px;
+                                    border                            : none;
+                                    cursor                            : pointer; 
+                                    cursor                            : hand;"><i class='bx bx-log-out-circle bx-md'></i></button></a>
+                            </div>
+                            <input type="password" name="otp" placeholder="OTP*">
+                            <div class="btn-wrapper mt-0">
+                                <button class="theme-btn-1 btn btn-block" type="submit">VERIFY</button>
+                            </div>
+                                <style>
+                                    #timer {
+                                        font-weight: bold;
+                                        margin-top: 20px;
+                                    }
+
+                                    #resend a {
+                                        pointer-events: none;
+                                        color: gray;
+                                    }
+                                    #resend a.active {
+                                        pointer-events: auto;
+                                        color: black;
+                                    }
+                                    #resend a.active:hover{
+                                        color:#80B500
+                                    }
+                                </style>
+                            <div id="resend" class="go-to-btn mt-20">
+                                <a type="button" onclick="resend()"><small>Resend OTP? <span id="timer">05:00</span></small></a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- LOGIN AREA END -->
+<script>
+
+    document.addEventListener('DOMContentLoaded', (event) => {
+    let timeLeft = 300; // 5 minutes in seconds
+    const timerElement = document.getElementById('timer');
+    const resendLink = document.querySelector('#resend a');
+    let countdown;
+
+    const formatTime = (seconds) => {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+    };
+
+    const startCountdown = () => {
+        countdown = setInterval(() => {
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                timerElement.textContent = '00:00';
+                resendLink.classList.add('active'); // Enable the resend button
+            } else {
+                timerElement.textContent = formatTime(timeLeft);
+                timeLeft--;
+            }
+        }, 1000);
+    };
+
+    const resetTimer = () => {
+        clearInterval(countdown);
+        timeLeft = 300;
+        timerElement.textContent = formatTime(timeLeft);
+        resendLink.classList.remove('active'); // Disable the resend button
+        startCountdown();
+    };
+
+    startCountdown();
+
+     window.resend = ()=>{
+        const url = window.location.origin
+        fetch(url+'/user/verification/resend')
+        resetTimer(); // Restart the timer
+    }
+});
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const messages = [
+            {% for message in messages %}
+            {
+                'message': '{{ message.message|escapejs }}',
+                'tags': '{{ message.tags }}'
+            },
+            {% endfor %}
+        ];
+        messages.forEach(function(message) {
+            showToaster_ltn(message.tags.charAt(0).toUpperCase() + message.tags.slice(1), message.message);
+        });
+    });
+</script>
+{% endblock content %}
+

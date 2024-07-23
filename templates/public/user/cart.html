@@ -1,0 +1,298 @@
+{% extends "public/user/base.html" %}
+
+{% block title %}Cart{% endblock title %}
+{% load static %}
+
+{% block content %}
+    
+    {% include "components/user/toast.html" %}
+    {% include "components/user/header.html" %}
+    {% include "components/user/cart.html" %}
+    {% include "components/user/mobile.html" %}
+    {% include "components/user/breadcrumb.html" with title='Cart' %}
+
+    <style>
+        {% if not coupon %}
+        #cart-coupon-row{
+            display: none;
+        }
+        {% endif %}
+        #cart-wallet-row{
+            display: none;
+        }
+        .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        }
+
+        /* The slider */
+        .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+        }
+
+        .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        }
+
+        input:checked + .slider {
+        background-color: #80B500;
+        }
+
+        input:focus + .slider {
+        box-shadow: 0 0 1px #80B500;
+        }
+
+        input:checked + .slider:before {
+        -webkit-transform: translateX(26px);
+        -ms-transform: translateX(26px);
+        transform: translateX(26px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+        border-radius: 34px;
+        }
+
+        .slider.round:before {
+        border-radius: 50%;
+        }
+    </style>
+    
+    <!-- SHOPING CART AREA START -->
+    <div class="liton__shoping-cart-area mb-120">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <span id="django-message" data-message="{{ message }}" data-tags="{{ message.tags }}"></span>
+                        {% endfor %}
+                    {% endif %}
+                    <div class="shoping-cart-inner">
+                        {% if cart_items %}
+                        <form action="/cart">
+                        <div class="shoping-cart-table table-responsive">
+                            <table class="table">
+                                <tbody>
+                                    {% for cart_item in cart_items %}
+                                    <tr>
+                                            <td class="cart-product-remove ">{{ forloop.counter }}</td>
+                                            <td class="cart-product-image ">
+                                                <a href="/products/{{cart_item.product.id}}"><img src="{{cart_item.product.images.first.image.url}}" alt="#"></a>
+                                            </td>
+                                            <td class="cart-product-info col-md-2">
+                                                <h4><a href="/products/{{cart_item.product.id}}">{{cart_item.product.name}}</a></h4>
+                                            </td>
+                                            <td class="cart-product-price ">${{cart_item.product.price}}</td>
+                                            <td class="cart-product-quantity ">
+                                                <div class="cart-plus-minus" data-product-id="{{ cart_item.product.id }}" data-product-stock="{{ cart_item.product.stock }}" data-product-min="{{ 1 }}">
+                                                    <input type="text" value="{{cart_item.quantity}}" name="qtybutton" class="cart-plus-minus-box" readonly>
+                                                </div>
+                                            </td>
+                                            {% if cart_item.quantity > cart_item.product.stock %}
+                                            <td class=".text-danger ">Out of Stock</td>
+                                            {% else %}
+                                            <td class="cart-product-subtotal " id="cart-product-subtotal">${{cart_item.sub_total}}</td>
+                                            {% endif %}
+                                            <td class="">
+                                                <a href="/cart/delete/{{cart_item.product.id}}"><i class="btn btx bx bx-trash"></i></a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    <tr class="cart-coupon-row">
+                                        <td colspan="6">
+                                            <div class="cart-coupon">
+                                                <input type="text" name="cart-coupon" id="coupon" placeholder="Coupon code" {% if coupon %}value="{{coupon}}"{% endif %} required>
+                                                <button onclick="handle_coupon()" type="button" class="btn theme-btn-2 btn-effect-2" id="coupon-btn">Apply Coupon</button>
+                                            </div>
+                                        </td>
+                                        {% if wallet > 0 %}
+                                        <td>
+                                            <label class="switch">
+                                                <input type="checkbox" id="wallet-input" name="wallet-input" value="1" onchange="handle_wallet()">
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <label>Pay <span id="cart-total-wallet">${{wallet}}</span> from wallet</label>
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        </form>
+                        <div class="shoping-cart-total mt-50">
+                            <h4>Cart Totals</h4>
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <td>Cart Subtotal</td>
+                                        <td id="cart-total-ajax">${{total}}</td>
+                                    </tr>
+                                    {% if discount > 0 %}
+                                    <tr>
+                                        <td>Discount</td>
+                                        <td id="cart-discount-ajax">-${{discount}}</td>
+                                    </tr>
+                                    {% endif %}
+                                    <tr id="cart-coupon-row">
+                                        <td>Coupon</td>
+                                        <td id="cart-coupon">-${{coupon.discount}}</td>
+                                    </tr>
+                                    <tr id="cart-wallet-row">
+                                        <td>Wallet</td>
+                                        <td id="cart-wallet"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Shipping and Handing</td>
+                                        <td id="cart-shipping-ajax">${{shipping}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Vat</td>
+                                        <td id="cart-vat-ajax">${{vat}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Order Total</strong></td>
+                                        <td><strong id="cart-total">${{price}}</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="btn-wrapper text-right">
+                                <a href="/checkout" class="theme-btn-1 btn btn-effect-1">Proceed to checkout</a>
+                            </div>
+                        </div>
+                        {% else %}
+                            <div class="shoping-cart-table table-responsive">
+                                <div style="text-align: center;">
+                                    <img style="max-width: 50%;" src="{% static "img/others/cart_empty.png" %}" alt="">
+                                </div>
+                                <div style="text-align: center;">
+                                    <h3>Your cart is empty</h3>
+                                    <p>Looks like you have not added anything to your cart. <br>Go ahead & explore top categories.</p>
+                                </div>
+                                <div style="text-align: center;">
+                                    <a href="/" class="theme-btn-1 btn black-btn">Continue Shopping</a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- SHOPING CART AREA END -->
+    
+
+    {% include "components/user/feature.html" %}
+    {% include "components/user/footer.html" %}
+
+    <script>
+        const handle_wallet=()=>{
+            const isChecked = $('#wallet-input').is(':checked');
+
+                const domain = window.location.origin
+                const url = `${domain}/api/wallet`
+                $.ajax({
+                url: url, // Replace with your actual URL
+                type: "GET",
+                data: { status: isChecked }, // Send data as an object
+                success: function(response) {
+                    // Handle successful response
+                    if (isChecked) {
+                        console.log(response);
+                        $('#cart-wallet-row').show();
+                        $('#cart-wallet').text(`-$${response.wallet}`);
+                        $('#cart-total').text(`$${response.price}`);
+                        $('#cart-total-wallet').text(`$${response.wallet}`);
+                    } else {
+                        $('#cart-wallet-row').hide();
+                        $('#cart-total').text(`$${response.price}`);
+                        $('#cart-total-wallet').text(`$${response.wallet}`);
+                    }
+                    // Update the page content here using the response data
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    // Handle error
+                    console.error(textStatus, errorThrown);
+                    // Display an error message to the user
+                }
+            });
+            }
+
+        const handle_coupon= async()=>{
+            const code = document.getElementById('coupon').value
+            const domain = window.location.origin
+            const url = `${domain}/api/coupon`
+            $.ajax({
+                url: url, // Replace with your actual URL
+                type: "GET",
+                data: { coupon: code }, // Send data as an object
+                success: function(response) {
+                    // Handle successful response
+                    if (response.coupon) {
+                        $('#cart-coupon-row').show();
+                        $('#cart-coupon').text(`-$${response.coupon}`);
+                        $('#cart-total').text(`$${response.price}`);
+                        $('#cart-total-wallet').text(`$${response.wallet}`);
+                        $('#cart-wallet').text(`-$${response.wallet}`);
+                        $('#coupon-btn').text('Coupon Applied');
+                        window.showToaster_ltn('success', 'Coupon applied Successfully');
+                    } else {
+                        $('#cart-coupon-row').hide();
+                        $('#cart-total').text(`$${response.price}`);
+                        $('#cart-total-wallet').text(`$${response.wallet}`);
+                        $('#cart-wallet').text(`-$${response.wallet}`);
+                        $('#coupon-btn').text('Invalid Coupon');
+                        window.showToaster_ltn('Warning', 'Invalid Coupon!');
+                    }
+                    // Update the page content here using the response data
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    // Handle error
+                    console.error(textStatus, errorThrown);
+                    // Display an error message to the user
+                }
+            });
+        }
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = [
+                {% for message in messages %}
+                {
+                    'message': '{{ message.message|escapejs }}',
+                    'tags': '{{ message.tags }}'
+                },
+                {% endfor %}
+            ];
+            messages.forEach(function(message) {
+                showToaster_ltn(message.tags.charAt(0).toUpperCase() + message.tags.slice(1), message.message);
+            });
+        });
+    </script>
+    {% endblock content %}

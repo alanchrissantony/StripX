@@ -1,0 +1,473 @@
+{% extends "public/user/base.html" %}
+
+{% block title %}Product Details{% endblock title %}
+
+{% block content %}
+
+<style>
+.ltn__tagcloud-widget .ltn_a_style{
+    cursor: pointer;
+}
+.ltn__tagcloud-widget .ltn_a_style:hover{
+    background-color: #f7f5eb;
+}
+</style>
+
+{% load static %}
+{% load custom_filters %}
+
+    {% include "components/user/toast.html" %}
+    {% include "components/user/header.html" %}
+    {% include "components/user/cart.html" %}
+    {% include "components/user/mobile.html" %}
+    {% include "components/user/breadcrumb.html" with title='Product Details' %}
+
+    <!-- SHOP DETAILS AREA START -->
+    <div class="ltn__shop-details-area pb-85">
+        <div class="container">
+            <div class="row">
+                
+                <div class="col-lg-8 col-md-12">
+                    <div class="ltn__shop-details-inner mb-60">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="ltn__shop-details-img-gallery">
+                                    <div class="ltn__shop-details-large-img">
+                                        {% for image in product.images.all %}
+                                        <div class="single-large-img">
+                                            <a class="MagicZoom" id="a-product-details-image" href="{{ image.image.url }}" data-rel="lightcase:myCollection">
+                                                <img id="product-details-image" src="{{ image.image.url }}" alt="Image">
+                                            </a>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="ltn__shop-details-small-img slick-arrow-2">
+                                        {% for image in product.images.all %}
+                                        <div class="single-small-img">
+                                            <img style="cursor: pointer;" onmouseover="magicThumb(`{{image.image.url}}`)" onmouseout="resetLargeImage()" src="{{ image.image.url }}" alt="Image">
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="modal-product-info shop-details-info pl-0">
+                                    <div class="product-ratting">
+                                        <ul class="star-rating">
+                                            {% for rating in 5|custom_range %}
+                                            {% with rating|add:"-0.5" as half_rating %}
+                                                {% if product.rating >= rating %}
+                                                <a><li><i class="fas fa-star"></i></li></a>
+                                                {% elif product.rating >= half_rating %}
+                                                <a><li><i class="fas fa-star-half-alt"></i></li></a>
+                                                {% else %}
+                                                <a><li><i class="far fa-star"></i></li></a>
+                                                {% endif %}
+                                            {% endwith %}
+                                            {% endfor %}
+                                            <li class="review-total"><a href="#">({{ review_count }} Reviews)</a></li>
+                                        </ul>
+                                    </div>
+                                    <h3>{{product.name}}</h3>
+                                    <div class="product-price">
+                                        <span>${{ product|calculate_discounted_price }}</span>
+                                        <del>${{product.price}}</del>
+                                    </div>
+                                    <div class="widget ltn__tagcloud-widget" style="padding: 0; margin: 0; border: none;">
+                                        <ul>
+                                            <li><a class="ltn_a_style">1 kg</a></li>
+                                        </ul>
+                                    </div>
+                                    <div class="modal-product-meta ltn__product-details-menu-1">
+                                        <ul>
+                                            <li>
+                                                <strong>Categories:</strong> 
+                                                <span>
+                                                    <a href="#">{{product.category}}</a>
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="ltn__product-details-menu-2">
+                                        {% if product.stock > 0 %}
+                                        <ul>
+                                            <li>
+                                                <div class="cart-plus-minus" data-product-min="{{ 1 }}" data-product-stock="{{ product.stock }}">
+                                                    <input type="number" value="1" id="quantity" name="qtybutton" class="cart-plus-minus-box" oninput="validity.valid(value='');" min="1" max="{{product.stock}}" readonly>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <button onclick="addToCart(`{{product.id}}`)" class="theme-btn-1 btn btn-effect-1" title="Add to Cart">
+                                                    <i class="fas fa-shopping-cart"></i>
+                                                    <span>ADD TO CART</span>
+                                                </button>
+                                            </li>
+                                        </ul>
+                                        <ul>
+                                            {% if product.stock <= 10 %}
+                                            
+                                            <li>
+                                                <h5 style="color: #b12704;">Hurry, Only a few left!</h5>
+                                            </li>
+
+                                            {% endif %}
+                                        </ul>
+                                        {% else %}
+                                        <ul>
+                                            <li>
+                                                <h5 style="color: #007600;">Currently unavailable.</h5>
+                                                <p>We don't know when or if this item will be back in stock.</p>
+                                            </li>
+                                        </ul>
+                                        {% endif %}
+                                    </div>
+                                    <div class="ltn__product-details-menu-3">
+                                        <ul>
+                                            {% if request.user.is_authenticated %}
+                                                <li onclick="handleWishlist('{{ product.id }}', '{{ product|in_wishlist:request.user }}')">
+                                                    <a href="javascript:void(0);">
+                                                        {% if product|in_wishlist:request.user %}
+                                                            <i id="wishlist-heart-icon-{{ product.id }}" class="fa fa-heart" style="color: #E1306C;"></i>
+                                                        {% else %}
+                                                            <i id="wishlist-heart-icon-{{ product.id }}" class="far fa-heart"></i>
+                                                        {% endif %}
+                                                        <span>Add to Wishlist</span>
+                                                    </a>
+                                                </li>
+                                            {% else %}
+                                                <li>
+                                                    <a href="/user/signin">
+                                                        <i class="far fa-heart"></i>
+                                                        <span>Add to Wishlist</span>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                            <li onclick="quickView(`{{product.id}}`, `{{product.name}}`, `{{product.images.first.image.url}}`, `{{product.category}}`, `{{product.price}}`, `{{product.rating}}`)">
+                                                <a href="#" class="" title="Compare" data-toggle="modal" data-target="#quick_view_modal">
+                                                    <i class="fas fa-exchange-alt"></i>
+                                                    <span>Compare</span>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <hr>
+                                    <div class="ltn__social-media">
+                                        <ul>
+                                            <li>Share:</li>
+                                            <li><a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a></li>
+                                            <li><a href="#" title="Twitter"><i class="fab fa-twitter"></i></a></li>
+                                            <li><a href="#" title="Linkedin"><i class="fab fa-linkedin"></i></a></li>
+                                            <li><a href="#" title="Instagram"><i class="fab fa-instagram"></i></a></li>
+                                            
+                                        </ul>
+                                    </div>
+                                    <hr>
+                                    <div class="ltn__safe-checkout">
+                                        <h5>Guaranteed Safe Checkout</h5>
+                                        <img src="{% static "img/icons/payment.png" %}" alt="Payment Image">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Shop Tab Start -->
+                    <div class="ltn__shop-details-tab-inner ltn__shop-details-tab-inner-2">
+                        <div class="ltn__shop-details-tab-menu">
+                            <div class="nav">
+                                <a class="active show" data-toggle="tab" href="#liton_tab_details_1_1">Description</a>
+                                <a data-toggle="tab" href="#liton_tab_details_1_2" class="">Reviews</a>
+                            </div>
+                        </div>
+                        <div class="tab-content">
+                            <div class="tab-pane fade active show" id="liton_tab_details_1_1">
+                                <div class="ltn__shop-details-tab-content-inner">
+                                    <h4 class="title-2">{{product.name}}</h4>
+                                    <p>{{product.description}}</p> 
+                                    <p>{{product.description}}</p>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="liton_tab_details_1_2">
+                                <div class="ltn__shop-details-tab-content-inner">
+                                    <h4 class="title-2">Customer Reviews</h4>
+                                    <div class="product-ratting">                                    
+                                        <ul class="star-rating">
+                                            {% for rating in 5|custom_range %}
+                                            {% with rating|add:"-0.5" as half_rating %}
+                                                {% if product.rating >= rating %}
+                                                <a><li><i class="fas fa-star"></i></li></a>
+                                                {% elif product.rating >= half_rating %}
+                                                <a><li><i class="fas fa-star-half-alt"></i></li></a>
+                                                {% else %}
+                                                <a><li><i class="far fa-star"></i></li></a>
+                                                {% endif %}
+                                            {% endwith %}
+                                            {% endfor %}
+                                            <li class="review-total"><a href="#">({{ review_count }} Reviews)</a></li>
+                                        </ul>
+                                    </div>
+                                    <hr>
+                                    <!-- comment-area -->
+                                    <div class="ltn__comment-area mb-30">
+                                        <div class="ltn__comment-inner">
+                                            <ul>
+                                                {% for review in reviews %}
+                                                <li>
+                                                    <div class="ltn__comment-item clearfix">
+                                                        <div class="ltn__commenter-img">
+                                                            <img {% if review.user.avatar != "False" %} src="{{review.user.avatar}}" {% else %}src="{% static "img/icons/user.png" %}"{% endif %} alt="Image">
+                                                        </div>
+                                                        <div class="ltn__commenter-comment">
+                                                            <h6><a href="#">{{review.user.first_name}} {{review.user.last_name}}</a></h6>
+                                                            <div class="product-ratting">
+                                                                <ul class="star-rating">
+                                                                    {% for rating in 5|custom_range %}
+                                                                    {% with rating|add:"-0.5" as half_rating %}
+                                                                        {% if product.rating >= rating %}
+                                                                        <a><li><i class="fas fa-star"></i></li></a>
+                                                                        {% elif product.rating >= half_rating %}
+                                                                        <a><li><i class="fas fa-star-half-alt"></i></li></a>
+                                                                        {% else %}
+                                                                        <a><li><i class="far fa-star"></i></li></a>
+                                                                        {% endif %}
+                                                                    {% endwith %}
+                                                                    {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                            <p>{{review.comment}}</p>
+                                                            <span class="ltn__comment-reply-btn">{{review.updated_at}}</span>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <!-- comment-reply -->
+        
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Shop Tab End -->
+                </div>
+                <div class="col-lg-4">
+                    <aside class="sidebar ltn__shop-sidebar ltn__right-sidebar">
+                        <!-- Top Rated Product Widget -->
+                        <div class="widget ltn__top-rated-product-widget">
+                            <h4 class="ltn__widget-title ltn__widget-title-border">Top Rated Product</h4>
+                            <ul>
+                                {% for product in top_rated %}
+                                <li>
+                                    <div class="top-rated-product-item clearfix">
+                                        <div class="top-rated-product-img">
+                                            <a href="/products/{{product.id}}"><img src="{{product.images.first.image.url}}" alt="#"></a>
+                                        </div>
+                                        <div class="top-rated-product-info">
+                                            <div class="product-ratting">
+                                                <ul class="star-rating">
+                                                    {% for rating in 5|custom_range %}
+                                                    {% with rating|add:"-0.5" as half_rating %}
+                                                        {% if product.rating >= rating %}
+                                                        <a><li><i class="fas fa-star"></i></li></a>
+                                                        {% elif product.rating >= half_rating %}
+                                                        <a><li><i class="fas fa-star-half-alt"></i></li></a>
+                                                        {% else %}
+                                                        <a><li><i class="far fa-star"></i></li></a>
+                                                        {% endif %}
+                                                    {% endwith %}
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                            <h6><a href="/products/{{product.id}}">{{product.name}}</a></h6>
+                                            <div class="product-price">
+                                                <span>${{ product|calculate_discounted_price }}</span>
+                                                <del>${{ product.price }}</del>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- SHOP DETAILS AREA END -->
+
+    <!-- PRODUCT SLIDER AREA START -->
+    <div class="ltn__product-slider-area ltn__product-gutter pb-70">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="section-title-area ltn__section-title-2">
+                        <h6 class="section-subtitle ltn__secondary-color">//  Products</h6>
+                        <h1 class="section-title">Related Products<span>.</span></h1>
+                    </div>
+                </div>
+            </div>
+            <div class="row ltn__related-product-slider-one-active slick-arrow-1">
+                <!-- ltn__product-item -->
+                {% for product in related_products %}
+                <div class="col-lg-12">
+                    <div class="ltn__product-item ltn__product-item-3 text-center">
+                        <div class="product-img">
+                            <a href="/products/{{product.id}}"><img src="{{product.images.first.image.url}}" alt="#"></a>
+                            <div class="product-badge">
+                                <ul>
+                                    <li class="sale-badge">New</li>
+                                </ul>
+                            </div>
+                            <div class="product-hover-action">
+                                <ul>
+                                    <li onclick="quickView(`{{product.id}}`, `{{product.name}}`, `{{product.images.first.image.url}}`, `{{product.category}}`, `{{product.price}}`, `{{product.rating}}`)">
+                                        <a href="#" title="Quick View" data-toggle="modal" data-target="#quick_view_modal">
+                                            <i class="far fa-eye"></i>
+                                        </a>
+                                    </li>
+                                    <li onclick="addCart(`{{product.id}}`, `{{product.name}}`, `{{product.images.first.image.url}}`, `{{product.stock}}`)">
+                                        <a href="#" title="Add to Cart" data-toggle="modal" data-target="#add_to_cart_modal" data-product="{{ product }}">
+                                          <i class="fas fa-shopping-cart"></i>
+                                        </a>
+                                      </li>
+                                    <li onclick="addToWishlist(`{{product.id}}`, `{{product.name}}`, `{{product.images.first.image.url}}`)">
+                                        <a href="#" title="Wishlist" data-toggle="modal" data-target="#liton_wishlist_modal">
+                                            <i class="far fa-heart"></i></a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-ratting">
+                                <ul class="star-rating">
+                                    {% for rating in 5|custom_range %}
+                                    {% with rating|add:"-0.5" as half_rating %}
+                                        {% if product.rating >= rating %}
+                                        <a><li><i class="fas fa-star"></i></li></a>
+                                        {% elif product.rating >= half_rating %}
+                                        <a><li><i class="fas fa-star-half-alt"></i></li></a>
+                                        {% else %}
+                                        <a><li><i class="far fa-star"></i></li></a>
+                                        {% endif %}
+                                    {% endwith %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <h2 class="product-title"><a href="/products/{{product.id}}">{{product.name}}</a></h2>
+                            <div class="product-price">
+                                <span>${{product|calculate_discounted_price}}</span>
+                                <del>${{product.price}}</del>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <!-- PRODUCT SLIDER AREA END -->
+    {% include "components/user/feature.html" %}
+    {% include "components/user/footer.html" %}
+    {% include "components/user/modal-quick-view.html" %}
+    {% include "components/user/modal-cart.html" %}
+    {% include "components/user/modal-wishlist.html" %}
+
+
+    <script>
+        const addToCart = async (proId) => {
+        const url = window.location.origin
+        const qty = document.getElementById('quantity').value;
+        const response = await fetch(url+'/cart/add/'+proId+'/'+qty)
+        $('#modal-product-status').html('Successfully added to your Cart.');
+        $('#add_to_cart_modal').modal('show');
+        //extract JSON from the http response
+        // do something with myJson
+        }
+
+        const addCart = async (proId, name, image, stock) => {
+        if(stock > 0){
+            const url = window.location.origin
+            const response = await fetch(url+'/cart/add/'+proId+'/'+1)
+            $('#modal-product-status').html('<i class="fa fa-check-circle"></i> Successfully added to your Cart.');
+            document.getElementById('view_cart_modal_btn').classList.remove('disabled')
+            document.getElementById('checkout_cart_modal_btn').classList.remove('disabled')
+        }else{
+            $('#modal-product-status').html('<i class="fa fa-times-circle" style="color: #b12704;"></i> Currently unavailable.');
+            document.getElementById('view_cart_modal_btn').classList.add('disabled')
+            document.getElementById('checkout_cart_modal_btn').classList.add('disabled')
+        }
+        $('#modal-product-name').html(name);
+        $('#modal-product-image').attr('src',image);
+        //extract JSON from the http response
+        // do something with myJson
+        }
+
+        const addToWishlist = async(proId, name, image)=>{
+            const url = window.location.origin
+            const response = await fetch(`${url}/wishlists/add/${proId}`)
+            $('#modal-wishlist-product-name').html(name);
+            $('#modal-wishlist-product-image').attr('src',image);
+        }
+        const handleWishlist = async (proId, flag) => {
+            const url = window.location.origin;
+        
+            try {
+                if (flag === 'True') {
+                    await fetch(`${url}/wishlists/remove/${proId}`);
+                } else {
+                    await fetch(`${url}/wishlists/add/${proId}`);
+                }
+                window.location.reload()
+            } catch (error) {
+                console.error('Error updating wishlist:', error);
+            }
+        };
+
+        const quickView = async(proId, name, image, category, price, rating)=>{
+
+            $('#modal-quick-view-product-id').html(proId);
+            $('#modal-quick-view-product-name').html(name);
+            $('#modal-quick-view-product-image').attr('src',image);
+            $('#modal-quick-view-product-price').html('$'+price);
+            $('#modal-quick-view-product-category').html(category);
+            $('#modal-quick-view-product-stock').attr('product-stock',stock);
+            $('#modal-quick-view-product-rating').attr('src',rating);
+        }
+
+        var default_img; // Declare default_img outside functions
+
+        window.onload = function() {
+            // Get initial image source on page load
+            default_img = document.getElementById('product-details-image').src;
+        };
+
+        const magicThumb = (image) => {
+            $('#product-details-image').attr('src', image);
+        };
+
+        function resetLargeImage() {
+            $('#product-details-image').attr('src', default_img);
+        }
+
+    </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const messages = [
+            {% for message in messages %}
+            {
+                'message': '{{ message.message|escapejs }}',
+                'tags': '{{ message.tags }}'
+            },
+            {% endfor %}
+        ];
+        messages.forEach(function(message) {
+            showToaster_ltn(message.tags.charAt(0).toUpperCase() + message.tags.slice(1), message.message);
+        });
+    });
+</script>
+
+{% endblock content %}

@@ -1,0 +1,392 @@
+{% extends "public/admin/base.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}Dashboard{% endblock title %}
+
+{% block content %}
+{% include "components/admin/aside.html" %}
+
+<style>
+    .scrollable {
+        /* Set a background color for the scrollable area */
+        background-color: #fff;
+
+        /* Set overflow to auto to enable scrolling */
+        overflow-y: auto;
+
+        /* Optional: Set a width and height for the scrollable area */
+        height: 100px;
+    }
+</style>
+<!-- Layout container -->
+<div class="layout-page">
+
+    {% include "components/admin/searchbar.html" %}
+    <!-- Content wrapper -->
+    <div class="content-wrapper">
+
+        <!-- Content -->
+
+        <div class="container-xxl flex-grow-1 container-p-y">
+
+            <div class="row">
+                <!-- Total Revenue -->
+                <div class="col-12 col-lg-8 order-2 order-md-3 order-lg-2 mb-4">
+                    <div class="card">
+                        <div class="row row-bordered g-0">
+                            <div class="col-md-8">
+                                <h5 class="card-header m-0 me-2 pb-3">Total Revenue</h5>
+                                <style>
+                                    @import url(https://fonts.googleapis.com/css?family=Roboto);
+                                    
+                                    body {
+                                        font-family: Roboto, sans-serif;
+                                    }
+                                    
+                                    #chart {
+                                        max-width: 650px;
+                                        margin: 35px auto;
+                                    }
+                                </style>
+                                <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+                                <div id="Chart" class="px-2"></div>
+                                <script>
+                                    var dy = {{ dy|safe }};
+                                    var dx = {{ dx|safe }};
+                                    
+                                    const update_chart = async (filter) => {
+                                        $('#growthReportId').text(filter);
+                                        const domain = window.location.origin;
+                                        const url = new URL(`${domain}/accounts/api/chart`);
+                                        url.searchParams.append('filter', filter);
+                                        
+                                        try {
+                                            const response = await fetch(url);
+                                            if (!response.ok) {
+                                                throw new Error('Network response was not ok');
+                                            }
+                                            const data = await response.json();
+                                            console.log(data);
+                                            dx = data.dx;
+                                            dy = data.dy;
+                                           
+                                            // Update chart data
+                                            chart.updateOptions({
+                                                series: [{
+                                                    name: 'sales',
+                                                    data: dy // Example initial data
+                                                }],
+                                                xaxis: {
+                                                    categories: dx
+                                                },
+                                            });
+                                            
+                                        } catch (error) {
+                                            console.error('Error fetching data:', error);
+                                        }
+                                    };
+                                    
+                                    var options = {
+                                        chart: {
+                                            type: 'line',
+                                            zoom: {
+                                                enabled: false,
+                                            }
+                                        },
+                                        series: [{
+                                            name: 'sales',
+                                            data: dy  // Example initial data
+                                        }],
+                                        xaxis: {
+                                            categories: dx
+                                        },
+                                        colors: ['#80B500']
+                                    };
+                                    
+                                    var chart = new ApexCharts(document.querySelector("#Chart"), options);
+                                    chart.render();
+                                </script>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card-body">
+                                    <div class="text-center">
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button"
+                                                id="growthReportId" data-bs-toggle="dropdown" aria-haspopup="true"
+                                                aria-expanded="false">
+                                                Yearly
+                                            </button>
+                                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="growthReportId">
+                                                <a class="dropdown-item" onclick="update_chart('yearly')">Yearly</a>
+                                                <a class="dropdown-item" onclick="update_chart('monthly')">Monthly</a>
+                                                <a class="dropdown-item" onclick="update_chart('daily')">Daily</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="growthChart"></div>
+                                <div class="text-center fw-semibold pt-3 mb-2">62% Company Growth</div>
+                                
+                                <div class="d-flex px-xxl-4 px-lg-2 p-4 gap-xxl-3 gap-lg-1 gap-3 justify-content-between">
+                                    <div class="d-flex">
+                                        <div class="me-2">
+                                            <span class="badge bg-label-primary p-2"><i class="bx bx-dollar text-primary"></i></span>
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <small>2022</small>
+                                            <h6 class="mb-0">$32.5k</h6>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex">
+                                        <div class="me-2">
+                                            <span class="badge bg-label-info p-2"><i class="bx bx-wallet text-info"></i></span>
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <small>2021</small>
+                                            <h6 class="mb-0">$41.2k</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--/ Total Revenue -->
+                <div class="col-12 col-md-8 col-lg-4 order-3 order-md-2">
+                    <div class="row">
+                        <div class="col-lg-6 col-md-12 col-6 mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="card-title d-flex align-items-start justify-content-between">
+                                        <div class="avatar flex-shrink-0">
+                                            <img src="{% static "assets/img/icons/unicons/chart-success.png" %}" alt="chart success"
+                                                class="rounded" />
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn p-0" type="button" id="cardOpt3"
+                                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i class="bx bx-dots-vertical-rounded"></i>
+                                            </button>
+                                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt3">
+                                                <a class="dropdown-item" href="javascript:void(0);">View More</a>
+                                                <a class="dropdown-item" href="javascript:void(0);">Delete</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span class="fw-semibold d-block mb-1">Revenue</span>
+                                    <h3 class="card-title mb-2">${{revenue}}</h3>
+                                    <small class="text-success fw-semibold"><i class="bx bx-up-arrow-alt"></i>
+                                        +72.80%</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-12 col-6 mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="card-title d-flex align-items-start justify-content-between">
+                                        <div class="avatar flex-shrink-0">
+                                            <img src="{% static "assets/img/icons/unicons/wallet-info.png" %}" alt="Credit Card"
+                                                class="rounded" />
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn p-0" type="button" id="cardOpt6"
+                                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i class="bx bx-dots-vertical-rounded"></i>
+                                            </button>
+                                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt6">
+                                                <a class="dropdown-item" href="javascript:void(0);">View More</a>
+                                                <a class="dropdown-item" href="javascript:void(0);">Delete</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span>Sales</span>
+                                    <h3 class="card-title text-nowrap mb-1">{{sales}}</h3>
+                                    <small class="text-success fw-semibold"><i class="bx bx-up-arrow-alt"></i>
+                                        +28.42%</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between flex-sm-row flex-column gap-3">
+                                        <div
+                                            class="d-flex flex-sm-column flex-row align-items-start justify-content-between">
+                                            <div class="card-title">
+                                                <h5 class="text-nowrap mb-2">Profile Report</h5>
+                                                <span class="badge bg-label-warning rounded-pill">Year <script>document.write(new Date().getFullYear());</script></span>
+                                            </div>
+                                            <div class="mt-sm-auto">
+                                                <small class="text-success text-nowrap fw-semibold"><i
+                                                        class="bx bx-chevron-up"></i> 68.2%</small>
+                                                <h3 class="mb-0">${{revenue|custom_conventer}}k</h3>
+                                            </div>
+                                        </div>
+                                        <div id="profileReportChart"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <!-- Order Statistics -->
+                <div class="col-md-6 col-lg-4 col-xl-4 order-0 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex align-items-center justify-content-between pb-0">
+                            <div class="card-title mb-0">
+                                <h5 class="m-0 me-2">Order Statistics</h5>
+                                <small class="text-muted">{{revenue|custom_conventer}}k Total Sales</small>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn p-0" type="button" id="orederStatistics" data-bs-toggle="dropdown"
+                                    aria-haspopup="true" aria-expanded="false">
+                                    <i class="bx bx-dots-vertical-rounded"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="orederStatistics">
+                                    <a class="dropdown-item" href="javascript:void(0);">Select All</a>
+                                    <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
+                                    <a class="dropdown-item" href="javascript:void(0);">Share</a>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="order_keys" value="{{keys}}">
+                        <input type="hidden" id="order_values" value="{{values}}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="d-flex flex-column align-items-center gap-1">
+                                    <h2 class="mb-2">{{sales}}</h2>
+                                    <span>Total Orders</span>
+                                </div>
+                                <div id="orderStatisticsChart"></div>
+                            </div>
+                            <ul class="p-0 m-0">
+                                {% for category in order_category %}
+                                <li class="d-flex mb-4 pb-1">
+                                    <div class="avatar flex-shrink-0 me-3">
+                                        <span class="avatar-initial rounded bg-label-primary"><i
+                                                class="bx bx-mobile-alt"></i></span>
+                                    </div>
+                                    <div
+                                        class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">{{category}}</h6>
+                                            <small class="text-muted">{{order_products|get_item:category}}</small>
+                                        </div>
+                                        <div class="user-progress">
+                                            <small class="fw-semibold">{{order_category|get_item:category|custom_conventer}}k</small>
+                                        </div>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!--/ Order Statistics -->
+
+                <!-- Expense Overview -->
+                <div class="col-md-6 col-lg-4 order-2 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex align-items-center justify-content-between">
+                            <h5 class="card-title m-0 me-2">Orders</h5>
+                            <div class="dropdown">
+                                <button class="btn p-0" type="button" id="transactionID" data-bs-toggle="dropdown"
+                                    aria-haspopup="true" aria-expanded="false">
+                                    <i class="bx bx-dots-vertical-rounded"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="transactionID">
+                                    <a class="dropdown-item" href="javascript:void(0);">Last 28 Days</a>
+                                    <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
+                                    <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <ul class="p-0 m-0">
+                                {% for order in order_obj %}
+                                <li class="d-flex mb-4 pb-1">
+                                    <div class="avatar flex-shrink-0 me-3">
+                                        
+                                        <img src="{% static "img/icons/icon-img/14.png" %}" alt="User" class="rounded" />
+                                        
+                                    </div>
+                                    <div
+                                        class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <small class="text-muted d-block mb-1">{{order}}</small>
+                                            <h6 class="mb-0">{{transaction.user.first_name}} {{transaction.user.last_name}}</h6>
+                                        </div>
+                                        <div class="user-progress d-flex align-items-center gap-1">
+                                            <h6 class="mb-0">+{{order_obj|get_item:order}}</h6>
+                                            <span class="text-muted">ORD</span>
+                                        </div>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!--/ Expense Overview -->
+
+                <!-- Transactions -->
+                <div class="col-md-6 col-lg-4 order-2 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex align-items-center justify-content-between">
+                            <h5 class="card-title m-0 me-2">Transactions</h5>
+                            <div class="dropdown">
+                                <button class="btn p-0" type="button" id="transactionID" data-bs-toggle="dropdown"
+                                    aria-haspopup="true" aria-expanded="false">
+                                    <i class="bx bx-dots-vertical-rounded"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="transactionID">
+                                    <a class="dropdown-item" href="javascript:void(0);">Last 28 Days</a>
+                                    <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
+                                    <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body scrollable">
+                            <ul class="p-0 m-0">
+                                {% for transaction in orders %}
+                                <li class="d-flex mb-4 pb-1">
+                                    <div class="avatar flex-shrink-0 me-3">
+                                        {% if transaction.payment.payment_method == 'PayPal' %}
+                                        <img src="{% static "assets/img/icons/unicons/paypal.png" %}" alt="User" class="rounded" />
+                                        {% else %}
+                                        <img src="{% static "assets/img/icons/unicons/wallet.png" %}" alt="User" class="rounded" />
+                                        {% endif %}
+                                    </div>
+                                    <div
+                                        class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <small class="text-muted d-block mb-1">{{transaction.payment.payment_method}}</small>
+                                            <h6 class="mb-0">{{transaction.user.first_name}} {{transaction.user.last_name}}</h6>
+                                        </div>
+                                        <div class="user-progress d-flex align-items-center gap-1">
+                                            <h6 class="mb-0">+{{transaction.price}}</h6>
+                                            <span class="text-muted">USD</span>
+                                        </div>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!--/ Transactions -->
+            </div>
+        </div>
+        <!-- / Content -->
+
+        {% include "components/admin/footer.html" %}
+
+        <div class="content-backdrop fade"></div>
+    </div>
+    <!-- Content wrapper -->
+</div>
+<!-- / Layout page -->
+{% endblock content %}
